@@ -1,5 +1,13 @@
 angular.module('app.controllers', []).
-controller('mainCtrl', function ($scope, protoData) {
+controller('mainCtrl', function ($scope) {
+	var options = {
+		data: ["blue", "red", "green", "yellow", "black", "white"],
+		theme: "square"
+	};
+	
+	$("#search").easyAutocomplete(options);
+}).
+controller('gameCtrl', function ($scope, protoData) {
     
     $scope.gameTitle = "Temp";
 	
@@ -16,16 +24,36 @@ controller('mainCtrl', function ($scope, protoData) {
 
         $scope.gameTitle = dataFile.name;
 
-        $scope.posWords = [];
-        for (var i = 0; i < dataFile.top_pos_words.length; i++) {
-            $scope.posWords.push(dataFile.top_pos_words[i][0]);
-        }
+        $scope.posWords = dataFile.top_pos_words;
 
-        $scope.negWords = [];
-        for (var i = 0; i < dataFile.top_neg_words.length; i++) {
-            $scope.negWords.push(dataFile.top_neg_words[i][0]);
-        }
+        $scope.negWords = dataFile.top_neg_words;
 
+        //should add jquery event listeners!!!!!!! look em up dangit
+
+
+	/*
+        $scope.setFontSize = function (index) {
+            var div = document.getElementById("posWord" + String.toString(index));
+            div.setAttribute(font - size, $scope.posWords[index][1]);
+        };
+	*/
+	
+        $(function () {
+            //maybe do some smart workaround so that we only loop through once?
+            //logic shouldn't be too bad, but it also doesn't really matter
+		    for(var i=0; i<$scope.posWords.length; i++) {
+			    var id = "#pos-word" + i;
+			    $(id).css("font-size", $scope.posWords[i][1] * 2);
+		    }
+		    for (var i = 0; i < $scope.negWords.length; i++) {
+		        var id = "#neg-word" + i;
+		        $(id).css("font-size", $scope.negWords[i][1] * 2);
+		    }
+		
+		    //$("[id^=posWord]");
+	    });
+
+	
         $scope.quotes = [];
         Object.getOwnPropertyNames(dataFile).forEach(function (val, idx, array) {
             if (val.startsWith("sentence")) {
@@ -71,36 +99,7 @@ controller('mainCtrl', function ($scope, protoData) {
                 backgroundColor: 'transparent'
             }
 
-            var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
-            chart.draw(data, options);
-        }
-
-
-        function gamesPlayedByPlayer() {
-
-            var nameGames = [];
-            var names = p.getPlayerNames();
-            for (var i = 0; i < names.length; i++) {
-                nameGames.push([
-                    names[i],
-                    g.numGamesPlayedByPlayerByName(names[i])
-                ]);
-            }
-
-            nameGames.sort(compareByGamesPlayed);
-
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Player');
-            data.addColumn('number', 'Games Played');
-            data.addRows(nameGames);
-
-            var options = {
-                'title': 'Games Played',
-                'width': 1200,
-                'height': 700
-            };
-
-            var chart = new google.visualization.ColumnChart(document.getElementById('pieChart'));
+            var chart = new google.visualization.PieChart(document.getElementById('pie-chart'));
             chart.draw(data, options);
         }
 
