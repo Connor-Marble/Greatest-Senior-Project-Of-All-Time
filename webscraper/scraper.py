@@ -17,14 +17,14 @@ content_end = '<div class="UserReviewCardContent_Footer">'
 
 date_pattern=re.compile(r'<div class="date_posted">Posted:*(?P<date>.+)*</div>')
 thumbs_up_pattern='thumbsUp.png'
-found_helpful_pattern=re.compile('(?P<count>[0-9]{1,4}) of [0-9]{1,4} people \((?P<percent>[0-9]{1,2})\%\) found this review helpful')
+found_helpful_pattern=re.compile('(?P<count>[0-9]{1,4}) of (?P<total>[0-9]{1,4}) people \((?P<percent>[0-9]{1,2})\%\) found this review helpful')
 
 title_pattern=re.compile('<div class="apphub_AppName">(?P<title>.*?)</div>')
 
 store_url_base="http://store.steampowered.com/app/{}/"
 
-#rview structure
-Review=namedtuple('Review', 'date text thumbs_up foundhelpful helpfulratio')
+#review structure
+Review=namedtuple('Review', 'date text thumbs_up foundhelpful notfoundhelpful')
 
 class ReviewScraper(object):
 
@@ -85,20 +85,20 @@ class ReviewScraper(object):
 
                     
                     helpful_count=0
-                    helpful_ratio=0.0
+                    nothelpful_count=0
                     
                     found_helpful_m=re.search(found_helpful_pattern,content)
 
                     if found_helpful_m:
                         helpful_count=int(found_helpful_m.group('count'))
-                        helpful_ratio=float(found_helpful_m.group('percent'))/100.0
+                        nothelpful_count=int(found_helpful_m.group('total'))-helpful_count
 
                     thumbs_up=bool(thumbs_up_pattern in content)
                     date = re.search(date_pattern, content).group('date')
                     
                     content=clean_review_text(content)
                     
-                    output.append(Review(date, content, thumbs_up, helpful_count, helpful_ratio))
+                    output.append(Review(date, content, thumbs_up, helpful_count, nothelpful_count))
                     
             except ValueError:
                 #no more reviews could be found
@@ -123,13 +123,15 @@ def dump_reviews_to_json(gameid, count):
             output.write(scraper.get_title() + '\n')
             
             for i, review in enumerate(scraper):
+                
                 json = ('{{"num_found_helpful": {},'+\
                           '"num_found_unhelpful": {},'+\
                           '"rating": {},'+\
                           '"review":{}}}\n').format(review.foundhelpful,
-                                                review.foundhelpful*(1-review.helpfulratio),
-                                                review.thumbs_up,
+                                                review.notfoundhelpful,
+                                                "recommended" if review.thumbs_up else "not recommended",
                                                 review.text)
+                
                 output.write(json)
                 if i > count:
                     break
@@ -143,7 +145,7 @@ def clean_review_text(review_text):
 if __name__=='__main__':
 
     gameid = int(input('>Gameid? '))
-    count = int(input('reviews to fetch?'))
+    count = int(input('>Reviews to fetch? '))
 
     start = time.time()
 
