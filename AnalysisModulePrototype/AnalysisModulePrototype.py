@@ -1,16 +1,22 @@
+import os
 import json
 import re
 import math
+from nltk.stem import WordNetLemmatizer
 
 # Reads json file and constructs a sentiment dictionary that records the number
 # of positive and negative reviews that contain a particular word. The structure
 # of the dictionary is sent_dict[word] = [num_pos_reviews, num_neg_reviews]. We
-# normalize all words to lowercase, but we don't lemmatize or consider morphology
-# in any way. We do filter out stop words.
+# normalize all words to lowercase and naively lemmatize using WordNet. We also
+# filter out stop words.
 def buildSentDict(file_name, stop_words):
     sent_dict = {}
     thumbs_up = 0
     thumbs_down = 0
+    sen_1_score = 1
+    sen_2_score = 1
+    sentence1 = ''
+    sentence2 = ''
     with open(file_name) as datafile:
         for line in datafile:
             data = json.loads(line)
@@ -21,8 +27,25 @@ def buildSentDict(file_name, stop_words):
             else:
                 thumbs_down += 1
 
-            # Convert text to bag of words, normalized to lowercase
-            bag_of_words = { word.lower() for word in re.findall('\w+\'?\w{1,2}', data['review'])
+            # If review is helpful, grab sentence.
+            if data['found_helpful_percentage'] and data['num_voted_helpfulness']:
+                helpfulness = float(data['found_helpful_percentage']) * float(data['num_voted_helpfulness'])
+            else:
+                helpfulness = 0
+            if helpfulness > sen_2_score and helpfulness <= sen_1_score:
+                sen_2_score = helpfulness
+                sentence2 = re.split('\.|!|\?', data['review'])[0]
+            if helpfulness > sen_1_score:
+                sen_2_score = sen_1_score
+                sentence2 = sentence1
+                sen_1_score = helpfulness
+                sentence1 = re.split('\.|!|\?', data['review'])[0]
+                
+            # Instantiate the lemmatizer
+            L = WordNetLemmatizer()
+            lemma = L.lemmatize
+            # Convert text to bag of words, normalized to lowercase and lemmatized
+            bag_of_words = { lemma(word.lower()) for word in re.findall('\w+\'?\w{1,2}', data['review'])
                              if word.lower() not in stop_words}
 
             # Update sent dict
@@ -34,7 +57,17 @@ def buildSentDict(file_name, stop_words):
                 else:
                     sent_dict[word][1] += 1
 
-    return sent_dict, thumbs_up, thumbs_down
+            # Build game data dictionary
+            game_data = {'name': game_name,
+                         'num_recommend': thumbs_up,
+                         'num_not_recommend': thumbs_down,
+                         'sentence_1': sentence1,
+                         'sentence_2': sentence2,
+                         'sen_1_score': sen_1_score,
+                         'sen_2_score': sen_2_score
+                         }
+
+    return sent_dict, game_data
 
 # Returns a dictionary of pointwise mutual information between word and ratings.
 # Dictionary has the structure dict[word] = [pos_info, neg_info]
@@ -57,24 +90,41 @@ def mutualInfo(sent_dict, thumbs_up, thumbs_down):
 
 
 if __name__ == '__main__':
-    data_file_name = input('Data file directory: ')
     stop_file_name = 'stopwords.txt'
-
+    games = []
+    
     # Load stop words.
     stop_words = set()
     with open(stop_file_name) as file:
         for line in file:
             stop_words.add(line.strip())
-        
-    sent_dict, thumbs_up, thumbs_down = buildSentDict(data_file_name, stop_words)
-    info = mutualInfo(sent_dict, thumbs_up, thumbs_down)
 
-    positive_list = sorted([(word, info[word][0]) for word in info], key=lambda x: -1*x[1])
-    negative_list = sorted([(word, info[word][1]) for word in info], key=lambda x: -1*x[1])
+    directory = input('Data directory: ')
+    for filename in os.listdir(directory):
+        if filename.endswith('.jsonlines'):
+            data_file_name = directory + '/' + filename
+            game_name = re.sub('_', ' ', filename[:-10])
+                
+            sent_dict, game_data = buildSentDict(data_file_name, stop_words)
+            info = mutualInfo(sent_dict, game_data['num_recommend'], game_data['num_not_recommend'])
 
-    print('Top ten positive words: ')
-    for i in range(10):
-        print(str(positive_list[i]) + ' ')
-    print('\nTop ten negative words: ')
-    for i in range(10):
-        print(str(negative_list[i]) + ' ')
+            positive_list = sorted([[word, info[word][0]] for word in info], key=lambda x: -1*x[1])
+            negative_list = sorted([[word, info[word][1]] for word in info], key=lambda x: -1*x[1])
+
+            game_data['top_pos_words'] = positive_list[:10]
+            game_data['top_neg_words'] = negative_list[:10]
+            
+            games.append(game_data)
+
+            print('Top ten positive words: ')
+            for i in range(10):
+                print(str(positive_list[i]) + ' ')
+            print('\nTop ten negative words: ')
+            for i in range(10):
+                print(str(negative_list[i]) + ' ')
+            print(game_data["sentence_1"])
+            print(game_data["sentence_2"])
+
+    
+    with open(input('Outfile: '), 'w') as outfile:
+         json.dump(games, outfile)
