@@ -1,0 +1,24 @@
+ <div ng-controller="gameCtrl">
+     <h1 class="game-title">{{ gameTitle }}</h1>
+     <div class="quotes-container">
+         <div class="quote" ng-repeat="quote in quotes track by $index">
+             {{ quote }}
+         </div>
+     </div>
+
+     <div class="word-list-container">
+         <div class="word-list">
+             <h3>Positive Words</h3>
+             <div class="pos-words" ng-repeat="word in posWords">
+                 <div id="pos-word{{$index}}">{{ word[0] }}</div>
+             </div>
+         </div>
+         <div class="word-list">
+             <h3>Negative Words</h3>
+             <div class="neg-words" ng-repeat="word in negWords">
+                 <div id="neg-word{{$index}}">{{ word[0] }}</div>
+             </div>
+         </div>
+     </div>
+     <div id="pie-chart"></div>
+ </div>
