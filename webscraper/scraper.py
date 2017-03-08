@@ -131,7 +131,7 @@ def dump_reviews_to_json(gameid, count):
                     "rating": "recommended" if review.thumbs_up else "not recommended",
                     "review": review.text
                 }
-                
+                output.write('\n')
                 json.dump(review_dict, output)
                 if i > count:
                     break
