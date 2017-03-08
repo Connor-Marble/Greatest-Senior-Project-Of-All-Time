@@ -5,6 +5,7 @@ from sys import argv
 import urllib2
 from xml.etree import ElementTree as et
 from collections import namedtuple
+import json
 
 destination = './reviews'
 
@@ -123,16 +124,15 @@ def dump_reviews_to_json(gameid, count):
             output.write(scraper.get_title() + '\n')
             
             for i, review in enumerate(scraper):
+
+                review_dict = {
+                    "num_found_helpful":review.foundhelpful,
+                    "num_found_unhelpful":review.notfoundhelpful,
+                    "rating": "recommended" if review.thumbs_up else "not recommended",
+                    "review": review.text
+                }
                 
-                json = ('{{"num_found_helpful": {},'+\
-                          '"num_found_unhelpful": {},'+\
-                          '"rating": {},'+\
-                          '"review":{}}}\n').format(review.foundhelpful,
-                                                review.notfoundhelpful,
-                                                "recommended" if review.thumbs_up else "not recommended",
-                                                review.text)
-                
-                output.write(json)
+                json.dump(review_dict, output)
                 if i > count:
                     break
 
