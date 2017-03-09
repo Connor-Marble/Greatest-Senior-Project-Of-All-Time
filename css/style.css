@@ -1,10 +1,44 @@
 body {
-    background-color: #c6d4df;
+    background-color: #222c3a;
 }
 
-h1 .game-title {
-    max-width: 300px;
+h1 {
+	color: #f0ead6;
+}
+
+h3 {
+	color: #f0ead6;
+}
+
+#search {
+	background-color: #c5c0b0;
+	border-color: #000000;
+}
+
+.easy-autocomplete-container {
+	/*background-color: #58b3f0;*/
+}
+
+.easy-autocomplete-container > ul {
+	background-color: #c5c0b0;
+	font-color: #000000;
+}
+
+.easy-autocomplete-container > ul > li.selected {
+	background-color: #c5c0b0 !important;
+}
+
+.navbar {
+	background-color: #1a202a;
+	border-color: #293e4f;
+}
+
+.game-title {
+	margin-top: 20px;
     margin-left: 20px;
+	margin-bottom: 20px;
+	font-family: 'Quicksand', sans-serif;
+	font-size: 5em;
 }
 
 .quote {
@@ -12,10 +46,18 @@ h1 .game-title {
     font-style: italic;
     margin-bottom: 5px;
     margin-top: 5px;
+    color: #dbd5c3;
 }
 
 .word-list-container {
+	display: inline-block;
+	vertical-align: top;
+}
 
+.word-list-header {
+	font-size: 2em;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
 }
 
 .word-list {
@@ -24,15 +66,16 @@ h1 .game-title {
     margin-bottom: auto;
     justify-content: center;
     margin-left: 40px;
+	font-family: 'Quicksand', sans-serif;
+	vertical-align: top;
 }
 
-.neg-words {
-
+.pos-words, .neg-words {
+	margin-left: 20px;
+	font-size: 1.5em;
 }
 
-.pos-words {
 
-}
 
 #pie-chart {
     display: inline-block;
@@ -77,7 +120,17 @@ h1 .game-title {
 	color: #3cba54;
 }
 
+.tooltip {
+	visibility: hidden;
+}
+/*
+.pos-words:hover .tooltip {
+	visibility: visible;
+}
 
+.neg-words:hover .tooltip {
+	visibility: visible;
+}*/
 
 
 
