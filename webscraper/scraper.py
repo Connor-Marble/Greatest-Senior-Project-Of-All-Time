@@ -51,6 +51,7 @@ class ReviewScraper(object):
 
     def _get_next_page(self):
         request_url=url_base.format(appid=self.gameid, offset=(self.page-1)*10, pagenum=self.page)
+        print request_url
         content = urllib2.urlopen(request_url).read()
         self.currentpage = ReviewScraper.parse_review_page(content)
         self.page += 1
@@ -99,7 +100,7 @@ class ReviewScraper(object):
                     
                     content=clean_review_text(content)
                     
-                    output.append(Review(date, content, thumbs_up, helpful_count, nothelpful_count))
+                    output.append(Review(date, unicode(content, errors='ignore'), thumbs_up, helpful_count, nothelpful_count))
                     
             except ValueError:
                 #no more reviews could be found
