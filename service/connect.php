@@ -2,7 +2,7 @@
   $connection = NULL;
   function openConnection() {
     global $connection;
-    $connection = mysqli_connect('localhost', 'mbrad287', 'Fra6Uchu', 'bookstore_mbrad287');
+    $connection = mysqli_connect(\\\\REDACTED\\\\);
     if (!$connection) {
       die("Connection failed: " . mysqli_connect_error());
     }
