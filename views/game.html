@@ -8,15 +8,19 @@
 
      <div class="word-list-container">
          <div class="word-list">
-             <h3>Positive Words</h3>
-             <div class="pos-words" ng-repeat="word in posWords">
-                 <div id="pos-word{{$index}}">{{ word[0] }}</div>
+             <h3 class="word-list-header">Positive Words</h3>
+             <div class="pos-words" ng-repeat="posWord in posWords">
+                 <div id="pos-word{{$index}}">{{ posWord.word }}
+					<span class="tooltip">{{ posWord.score }}</span>
+				 </div>
              </div>
          </div>
          <div class="word-list">
-             <h3>Negative Words</h3>
-             <div class="neg-words" ng-repeat="word in negWords">
-                 <div id="neg-word{{$index}}">{{ word[0] }}</div>
+             <h3 class="word-list-header">Negative Words</h3>
+             <div class="neg-words" ng-repeat="negWord in negWords">
+                 <div id="neg-word{{$index}}">{{ negWord.word }}
+					<span class="tooltip">{{ negWord.score }}</span>
+				 </div>
              </div>
          </div>
      </div>
