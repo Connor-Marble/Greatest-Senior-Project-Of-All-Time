@@ -2,6 +2,7 @@ import os
 import time
 import re
 from sys import argv
+import requests
 import urllib2
 from xml.etree import ElementTree as et
 from collections import namedtuple
@@ -25,6 +26,12 @@ store_url_base="http://store.steampowered.com/app/{}/"
 
 #review structure
 Review=namedtuple('Review', 'date text thumbs_up foundhelpful notfoundhelpful')
+
+age_bypass_cookies={
+    'birthtime' : '28805197',
+    'path' : '/',
+    'domain' : 'store.steampowered.com'
+}
 
 class ReviewScraper(object):
 
@@ -50,7 +57,8 @@ class ReviewScraper(object):
 
     def _get_next_page(self):
         request_url=url_base.format(appid=self.gameid, offset=(self.page-1)*10, pagenum=self.page)
-        content = urllib2.urlopen(request_url).read()
+        response = requests.get(request_url, cookies=age_bypass_cookies)
+        content = response.text
         self.currentpage = ReviewScraper.parse_review_page(content)
         self.page += 1
         return bool(self.currentpage)
@@ -58,7 +66,8 @@ class ReviewScraper(object):
     def get_title(self):
         if not self.title:
             request_url=store_url_base.format(self.gameid)
-            storepage=urllib2.urlopen(request_url).read()
+            response = requests.get(request_url, cookies=age_bypass_cookies)
+            storepage=response.text
             title_m=re.search(title_pattern ,storepage)
             self.title = title_m.group('title')
 
@@ -123,16 +132,21 @@ def dump_reviews_to_json(gameid, count):
             output.write(scraper.get_title() + '\n')
             
             for i, review in enumerate(scraper):
-                
-                json = ('{{"num_found_helpful": {},'+\
+                try:
+                    json = ('{{"num_found_helpful": {},'+\
                           '"num_found_unhelpful": {},'+\
                           '"rating": {},'+\
                           '"review":{}}}\n').format(review.foundhelpful,
                                                 review.notfoundhelpful,
                                                 "recommended" if review.thumbs_up else "not recommended",
-                                                review.text)
-                
-                output.write(json)
+                                                    review.text.encode('utf-8'))
+
+                    output.write(json)
+                    
+                except:
+                    log.error("Problem writing review to json.")
+                    print review.text
+                    
                 if i > count:
                     break
 
