@@ -6,6 +6,8 @@ import requests
 import urllib2
 from xml.etree import ElementTree as et
 from collections import namedtuple
+import logging as log
+import json
 
 destination = './reviews'
 
@@ -19,8 +21,13 @@ content_end = '<div class="UserReviewCardContent_Footer">'
 date_pattern=re.compile(r'<div class="date_posted">Posted:*(?P<date>.+)*</div>')
 thumbs_up_pattern='thumbsUp.png'
 found_helpful_pattern=re.compile('(?P<count>[0-9]{1,4}) of (?P<total>[0-9]{1,4}) people \((?P<percent>[0-9]{1,2})\%\) found this review helpful')
+category_pattern = re.compile('http://store.steampowered.com\/search\/\?category.*?>(?P<category>[A-Za-z].*?)</a>')
+
+dev_pattern = re.compile('<a href=\"http://store.steampowered.com\/search\/\?developer=.*?>(?P<dev>.*?)</a>.*?publisher=.*?>(?P<pub>.*?)</a>')
 
 title_pattern=re.compile('<div class="apphub_AppName">(?P<title>.*?)</div>')
+
+genre_pattern=re.compile('http://store.steampowered.com\/genre\/.*?>(?P<genre>.*?)</a>')
 
 store_url_base="http://store.steampowered.com/app/{}/"
 
@@ -41,6 +48,7 @@ class ReviewScraper(object):
         self.page=0
         self.currentpage=[]
         self.title=None
+        self.get_metadata()
 
     def __iter__(self):
         return self
@@ -72,7 +80,36 @@ class ReviewScraper(object):
             self.title = title_m.group('title')
 
         return self.title
-    
+
+    def get_metadata(self):
+
+        request_url=store_url_base.format(self.gameid)
+        response = requests.get(request_url, cookies=age_bypass_cookies)
+        storepage=response.text.replace('\n', '')
+        
+        title_m=re.search(title_pattern ,storepage)
+        dev_m=re.search(dev_pattern, storepage)
+        
+        self.title = title_m.group('title').encode('utf-8')
+        dev = dev_m.group('dev').encode('utf-8')
+        pub = dev_m.group('pub').encode('utf-8')
+
+        categories = re.finditer(category_pattern, storepage) or []
+        categories = map(lambda c:c.group('category').encode('utf-8'), categories)
+
+        genres = re.finditer(genre_pattern, storepage[storepage.find('<b>Genre:'):]) or []
+        genres = map(lambda g:g.group('genre').encode('utf-8'), genres)
+        
+        metadata = {
+            'title':self.title,
+            'developer':dev,
+            'publisher':pub,
+            'categories':categories,
+            'genres':genres
+        }
+
+        return metadata
+        
     def next(self):
         if self.currentpage:
             return self.currentpage.pop(0)
@@ -129,11 +166,11 @@ def dump_reviews_to_json(gameid, count):
     with ReviewScraper(gameid) as scraper:
         with open('{}/{}.json'.format(destination, gameid), 'w') as output:
             
-            output.write(scraper.get_title() + '\n')
+            output.write(json.dumps(scraper.get_metadata()) + '\n')
             
             for i, review in enumerate(scraper):
                 try:
-                    json = ('{{"num_found_helpful": {},'+\
+                    json_s = ('{{"num_found_helpful": {},'+\
                           '"num_found_unhelpful": {},'+\
                           '"rating": {},'+\
                           '"review":{}}}\n').format(review.foundhelpful,
@@ -141,15 +178,18 @@ def dump_reviews_to_json(gameid, count):
                                                 "recommended" if review.thumbs_up else "not recommended",
                                                     review.text.encode('utf-8'))
 
-                    output.write(json)
+                    output.write(json_s.replace('<br>', ''))
                     
                 except:
                     log.error("Problem writing review to json.")
                     print review.text
+
+                if i%100 is 0:
+                    log.info('scraped {} reviews of requested {}'.format(i, count))
                     
                 if i > count:
                     break
-
+                
         
 def clean_review_text(review_text):
     if '</div>' in review_text:
@@ -161,7 +201,4 @@ if __name__=='__main__':
     gameid = int(input('>Gameid? '))
     count = int(input('>Reviews to fetch? '))
 
-    start = time.time()
-
     dump_reviews_to_json(gameid, count)
-
