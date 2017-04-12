@@ -1,0 +1,19 @@
+ <div ng-controller="featureCtrl">
+	<h1 class="feature-name" >{{ featureName }}</h1>
+	<h3 id="associated-words-title">Associated Words</h3>
+	<div id="associated-words-container">
+		{{ associatedWordsList }}
+	</div>
+	<div class="game-list">
+		<h3>Positive</h3>
+		<div class="games" ng-repeat="game in posGamesForFeature">
+			<a href="#/game/{{game.id}}">{{ game.name }}</a>
+		</div>
+	</div>
+	<div class="game-list">
+		<h3>Negative</h3>
+		<div class="games" ng-repeat="game in negGamesForFeature">
+			<a href="#/game/{{game.id}}">{{ game.name }}</a>
+		</div>
+	</div>
+ </div>

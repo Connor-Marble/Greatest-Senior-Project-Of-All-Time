@@ -1,5 +1,5 @@
  <div ng-controller="gameCtrl">
-     <h1 class="game-title">{{ gameTitle }}</h1>
+     <a class="game-title" href="https://store.steampowered.com/app/{{game.id}}">{{ game.title }}</a>
      <div class="quotes-container">
          <div class="quote" ng-repeat="quote in quotes track by $index">
              {{ quote }}

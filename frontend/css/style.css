@@ -31,22 +31,66 @@ h3 {
 .navbar {
 	background-color: #1a202a;
 	border-color: #293e4f;
+	height: 75px;
 }
 
-.game-title {
+.navbar-header {
+	position: relative;
+	height: 100%;
+	/*min-width: 412px;*/
+	white-space: nowrap;
+}
+
+.navbar-title {
+	position: absolute;
+	top: 0;
+    bottom: 0;
+	margin-top: auto;
+	margin-bottom: auto;
+	font-family: 'Quicksand', sans-serif;
+	color: #f0ead6 !important;
+	font-size: 3em;
+}
+
+.navbar-title:hover {
+	color: #999589 !important;
+}
+
+.nav-tabs {
+	float: right;
+}
+
+.game-title, .feature-name {
 	margin-top: 20px;
-    margin-left: 20px;
+	margin-left: 20px;
 	margin-bottom: 20px;
 	font-family: 'Quicksand', sans-serif;
 	font-size: 5em;
+	color: #f0ead6;
+	display: block;
+}
+
+.game-title:hover {
+	color: #999589 !important;
+	text-decoration: none;
 }
 
 .quote {
-    margin-left: 70px;
     font-style: italic;
     margin-bottom: 5px;
     margin-top: 5px;
     color: #dbd5c3;
+}
+
+.quotes-container {
+	margin-left: 70px;
+	padding: 10px 20px;
+	max-width: 900px;
+	border-style: outset;
+	border-width: 5px;
+	border-color: #6380A8;
+	background-color: #3C4D66;
+	margin-bottom: 30px;
 }
 
 .word-list-container {
@@ -66,8 +110,37 @@ h3 {
     margin-bottom: auto;
     justify-content: center;
     margin-left: 40px;
+	padding: 20px;
+	padding-top: 0px;
 	font-family: 'Quicksand', sans-serif;
 	vertical-align: top;
+	background-color: #8C887D;
+	border-color: #C8C2B2;
+	border-style: outset;
+	border-width: 10px;
+	
+}
+
+.game-list {
+	display: inline-block;
+	margin-top: auto;
+	margin-bottom: auto;
+	margin-left: 40px;
+	padding: 20px;
+	font-family: 'Quicksand', sans-serif;
+	vertical-align: top;
+}
+
+#associated-words-title {
+	font-family: 'Quicksand', sans-serif;
+	margin-left: 40px;
+}
+
+#associated-words-container {
+	font-family: 'Quicksand', sans-serif;
+	margin-left: 50px;
+	max-width: 700px;
+	color: #8C887D;
 }
 
 .pos-words, .neg-words {
@@ -75,13 +148,11 @@ h3 {
 	font-size: 1.5em;
 }
 
-
-
 #pie-chart {
     display: inline-block;
 }
 
-#search-container {
+#home-search-container {
 	position: absolute;
 	top: 30%;
 	left: 50%;
@@ -94,30 +165,14 @@ h3 {
 	margin-right: auto;
 }
 
-#search-container > h1 {
+#home-search-container > h1 {
 	text-align: center;
 	font-size: 5em;
 	font-family: 'Quicksand', sans-serif;
 }
 
-#search-container > h1 > div {
+#home-search-container > h1 > div {
 	display: inline;
-}
-
-.b {
-	color: #4885ed;
-}
-
-.r {
-	color: #db3236;
-}
-
-.y {
-	color: #f4c20d;
-}
-
-.g {
-	color: #3cba54;
 }
 
 .tooltip {
@@ -132,9 +187,41 @@ h3 {
 	visibility: visible;
 }*/
 
+.all-games-list-container {
+	display: inline-block;
+}
 
+.all-games-search {
+	background-color: #c5c0b0;
+	border-color: #1a202a;
+	max-width: 75%;
+	margin: 10px;
+}
 
+.requested-game {
+	display: inline;
+}
 
+.priority-container {
+	text-align: right;
+	display: inline;
+	float: right;
+}
+
+.priority-value {
+	color: #f0ead6;
+}
+
+#requested-games-container {
+	padding-right: 10%;
+}
+
+.add-to-queue-button {
+	margin: 2px;
+	width: 25px;
+	height: 25px;
+	padding: 0px;
+}
 
 
 

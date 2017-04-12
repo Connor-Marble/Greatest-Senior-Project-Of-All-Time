@@ -1,13 +1,5 @@
 angular.module('app.services', []).
 factory('protoData', function ($http) {
-
-
-    function _getData() {
-        return $.ajax({
-            url: 'https://rayfissel.visualstudio.com/DefaultCollection/_apis/tfvc/items/$/Sentiment Analysis/data/game_data-3.json?api-version=2.0',
-            headers: { Authorization: 'Basic cmF5bW9uZF9maXNzZWxAY29tcGFpZC5jb206YmZ4c2pxM2k0a2RydXB6Y3pqaTJ4eHN4dG4zdGZ6cmg1eWhubDdrNHhud29maWhyemVhYQ==' }
-        });
-    }
 	
 	function _getAllGameIDsAndNames() {
 		return $.ajax({
@@ -44,14 +36,62 @@ factory('protoData', function ($http) {
 			url: 'service/test.php?func=getNegWordsForGame&arg1=' + id + '&arg2=' + num
 		});
 	}
+	
+	function _getGamesThatHaveData() {
+		return $.ajax({
+			url: 'service/test.php?func=getGamesThatHaveData'
+		})
+	}
+	
+	function _getGamesThatHaveDataLike(phrase) {
+		return $.ajax({
+			url: 'service/test.php?func=getGamesThatHaveDataLike&arg1=' + phrase
+		})
+	}
+	
+	function _getGamesThatDontHaveDataNotRequested() {
+		return $.ajax({
+			url: 'service/test.php?func=getGamesThatDontHaveDataNotRequested'
+		})
+	}
+	
+	function _getRequestedGames() {
+		return $.ajax({
+			url: 'service/test.php?func=getRequestedGames'
+		})
+	}
+	
+	function _requestGame(id) {
+		return $.ajax({
+			url: 'service/test.php?func=requestGame&arg1=' + id
+		})
+	}
+	
+	function _getGamesForFeature(id) {
+		return $.ajax({
+			url: 'service/test.php?func=getGamesForFeature&arg1=' + id
+		})
+	}
+	
+	function _getGamesForFeatureNeg(id) {
+		return $.ajax({
+			url: 'service/test.php?func=getGamesForFeatureNeg&arg1=' + id
+		})
+	}
 
     return {
-		getData: _getData,
 		getAllGameIDsAndNames: _getAllGameIDsAndNames,
 		getGameData: _getGameData,
 		getGameDataWithRecs: _getGameDataWithRecs,
 		getGameWithRecsAndSens: _getGameWithRecsAndSens,
 		getPosWordsForGame: _getPosWordsForGame,
-		getNegWordsForGame: _getNegWordsForGame
+		getNegWordsForGame: _getNegWordsForGame,
+		getGamesThatHaveData: _getGamesThatHaveData,
+		getGamesThatHaveDataLike: _getGamesThatHaveDataLike,
+		getGamesThatDontHaveDataNotRequested: _getGamesThatDontHaveDataNotRequested,
+		getRequestedGames: _getRequestedGames,
+		requestGame: _requestGame,
+		getGamesForFeature: _getGamesForFeature,
+		getGamesForFeatureNeg: _getGamesForFeatureNeg
     }
 });
