@@ -6,10 +6,7 @@ import requests
 import urllib2
 from xml.etree import ElementTree as et
 from collections import namedtuple
-<<<<<<< HEAD
 import logging as log
-=======
->>>>>>> phase2
 import json
 
 destination = './reviews'
@@ -69,13 +66,8 @@ class ReviewScraper(object):
 
     def _get_next_page(self):
         request_url=url_base.format(appid=self.gameid, offset=(self.page-1)*10, pagenum=self.page)
-<<<<<<< HEAD
         response = requests.get(request_url, cookies=age_bypass_cookies)
         content = response.text
-=======
-        print request_url
-        content = urllib2.urlopen(request_url).read()
->>>>>>> phase2
         self.currentpage = ReviewScraper.parse_review_page(content)
         self.page += 1
         return bool(self.currentpage)
@@ -144,7 +136,7 @@ class ReviewScraper(object):
                     
                     content=clean_review_text(content)
                     
-                    output.append(Review(date, unicode(content, errors='ignore'), thumbs_up, helpful_count, nothelpful_count))
+                    output.append(Review(date, content, thumbs_up, helpful_count, nothelpful_count))
                     
             except ValueError:
                 #no more reviews could be found
@@ -169,7 +161,6 @@ def dump_reviews_to_json(gameid, count):
             output.write(json.dumps(scraper.get_metadata()) + '\n')
             
             for i, review in enumerate(scraper):
-<<<<<<< HEAD
                 try:
                     json_s = ('{{"num_found_helpful": {},'+\
                           '"num_found_unhelpful": {},'+\
@@ -188,17 +179,6 @@ def dump_reviews_to_json(gameid, count):
                 if i%100 is 0:
                     log.info('scraped {} reviews of requested {}'.format(i, count))
                     
-=======
-
-                review_dict = {
-                    "num_found_helpful":review.foundhelpful,
-                    "num_found_unhelpful":review.notfoundhelpful,
-                    "rating": "recommended" if review.thumbs_up else "not recommended",
-                    "review": review.text
-                }
-                output.write('\n')
-                json.dump(review_dict, output)
->>>>>>> phase2
                 if i > count:
                     break
                 
