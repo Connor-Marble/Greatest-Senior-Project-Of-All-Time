@@ -48,7 +48,8 @@ class ReviewScraper(object):
         self.page=0
         self.currentpage=[]
         self.title=None
-        self.get_metadata()
+        metadata = self.get_metadata()
+        self.title = metadata['title'] 
 
     def __iter__(self):
         return self
@@ -71,15 +72,6 @@ class ReviewScraper(object):
         self.page += 1
         return bool(self.currentpage)
 
-    def get_title(self):
-        if not self.title:
-            request_url=store_url_base.format(self.gameid)
-            response = requests.get(request_url, cookies=age_bypass_cookies)
-            storepage=response.text
-            title_m=re.search(title_pattern ,storepage)
-            self.title = title_m.group('title')
-
-        return self.title
 
     def get_metadata(self):
 
@@ -97,7 +89,7 @@ class ReviewScraper(object):
         categories = re.finditer(category_pattern, storepage) or []
         categories = map(lambda c:c.group('category').encode('utf-8'), categories)
 
-        genres = re.finditer(genre_pattern, storepage[storepage.find('<b>Genre:'):]) or []
+        genres = re.finditer(genre_pattern, storepage[storepage.find('Genre:'):]) or []
         genres = map(lambda g:g.group('genre').encode('utf-8'), genres)
         
         metadata = {
