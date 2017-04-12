@@ -3,6 +3,7 @@ import json
 import re
 import math
 from nltk.stem import WordNetLemmatizer
+import pymysql
 
 # Reads json file and constructs a sentiment dictionary that records the number
 # of positive and negative reviews that contain a particular word. The structure
@@ -17,19 +18,24 @@ def buildSentDict(file_name, stop_words):
     sen_2_score = 1
     sentence1 = ''
     sentence2 = ''
-    with open(file_name) as datafile:
+    with open(file_name, encoding='utf8') as datafile:
+        game_name = datafile.readline()
         for line in datafile:
-            data = json.loads(line)
+            try:
+                data = json.loads(line)
+            except json.decoder.JSONDecodeError:
+                continue
             # Update thumbs up/down
-            recommended = (data['rating'] == 'Recommended')
+            recommended = (data['rating'] == 'recommended')
             if recommended:
                 thumbs_up += 1
             else:
                 thumbs_down += 1
 
             # If review is helpful, grab sentence.
-            if data['found_helpful_percentage'] and data['num_voted_helpfulness']:
-                helpfulness = float(data['found_helpful_percentage']) * float(data['num_voted_helpfulness'])
+            if data['num_found_helpful']:
+                helpfulness = float(data['num_found_helpful']) * float(data['num_found_helpful']) \
+                              / float(data['num_found_unhelpful'] + data['num_found_helpful'])
             else:
                 helpfulness = 0
             if helpfulness > sen_2_score and helpfulness <= sen_1_score:
@@ -44,9 +50,16 @@ def buildSentDict(file_name, stop_words):
             # Instantiate the lemmatizer
             L = WordNetLemmatizer()
             lemma = L.lemmatize
+            #Strip HTML tags
+            review = re.sub('</?\w+((\s+\w+(\s*=\s*(?:".*?"|\'.*?\'|[\^\'">\s]+))?)+\s*|\s*)/?>', '', data['review'])
+            review = re.sub('&lt|&rt|br>', '', review)
+            review = review.strip()
+            #Clear out bad unicode
+            review = review.encode('ascii', 'ignore')
+            review = review.encode('utf-8')
             # Convert text to bag of words, normalized to lowercase and lemmatized
-            bag_of_words = { lemma(word.lower()) for word in re.findall('\w+\'?\w{1,2}', data['review'])
-                             if word.lower() not in stop_words}
+            bag_of_words = { lemma(word.lower()) for word in re.findall('\w+\'?\w{1,2}', review)
+                             if (word.lower() not in stop_words) and len(word) < 30}
 
             # Update sent dict
             for word in bag_of_words:
@@ -58,7 +71,8 @@ def buildSentDict(file_name, stop_words):
                     sent_dict[word][1] += 1
 
             # Build game data dictionary
-            game_data = {'name': game_name,
+            game_data = {'id': file_name.split('/')[-1].split('.')[0],
+                         'name': game_name,
                          'num_recommend': thumbs_up,
                          'num_not_recommend': thumbs_down,
                          'sentence_1': sentence1,
@@ -89,6 +103,67 @@ def mutualInfo(sent_dict, thumbs_up, thumbs_down):
     return info
 
 
+#Stores game data to the database
+def storeToDB(game_data):
+    game_id = int(game_data['id'])
+    num_recommend = int(game_data['num_recommend'])
+    num_not_recommend = int(game_data['num_not_recommend'])
+    info = game_data['sent_info']
+    
+    user = 'mbrad287'
+    password = 'Fra6Uchu'
+    db = 'bookstore_mbrad287'
+
+    connection = pymysql.connect(user=user, password=password, db=db, charset='utf8')
+    
+    with connection.cursor() as cursor:
+        #Don't do anything if we've done this game before ayyyyy lmao XD
+        query = "SELECT * FROM `Recommendation` WHERE `game_id` = %s"   
+        if not cursor.execute(query, (game_id)):  
+            #Update Recommended
+            query = "INSERT INTO `Recommendation` (`game_id`, `pos`, `neg`, `time_stamp`) VALUES (%s, %s, %s, 1)"
+            cursor.execute(query, (game_id, num_recommend, num_not_recommend))
+            connection.commit()
+
+        query = "SELECT * FROM `Quotes` WHERE `game_id` = %s"
+        if not cursor.execute(query, (game_id)):
+            #Update Quotes
+            query = "INSERT INTO `Quotes` (`game_id`, `sentence`, `score`) VALUES (%s, %s, %s)"
+            cursor.execute(query, (game_id, game_data['sentence_1'], game_data['sen_1_score']))
+            connection.commit()
+            cursor.execute(query, (game_id, game_data['sentence_2'], game_data['sen_2_score']))
+            connection.commit()
+
+        #Update Word and GameWord
+        for word in info:
+            if not word.isalnum():
+                continue
+            #Check if word is in DB already
+            query = "SELECT `id` FROM `Word` WHERE `word` = %s"
+            if cursor.execute(query, (word)):
+                word_id = cursor.fetchone()
+                if word_id == None:
+                    print('Word exists, word_id is NULL')
+            else:
+                query = "INSERT INTO `Word` (`word`) VALUES (%s)"
+                cursor.execute(query, (word))
+                connection.commit()
+                query = "SELECT `id` FROM `Word` WHERE `word` = %s"
+                cursor.execute(query, (word))
+                connection.commit()
+                word_id = cursor.fetchone()
+                if word_id == None:
+                    print('!!!!!!!!!!! word_id is None for ' + word + ' !!!!!!!!!!!!')
+            #Update GameWord
+            query = "SELECT * FROM `GameWord` WHERE `game_id` = %s AND `word_id` = %s"
+            if not cursor.execute(query, (game_id, word_id)):
+                query = "INSERT INTO `GameWord` (`game_id`, `word_id`, `pos_score`, `neg_score`) VALUES (%s, %s, %s, %s)"
+                cursor.execute(query, (game_id, word_id, info[word][0], info[word][1]))
+                connection.commit()
+
+    connection.close()
+
+
 if __name__ == '__main__':
     stop_file_name = 'stopwords.txt'
     games = []
@@ -99,32 +174,20 @@ if __name__ == '__main__':
         for line in file:
             stop_words.add(line.strip())
 
-    directory = input('Data directory: ')
+    directory = './reviews'
     for filename in os.listdir(directory):
-        if filename.endswith('.jsonlines'):
+        if filename.endswith('.jsonlines') or filename.endswith('.json'):
             data_file_name = directory + '/' + filename
-            game_name = re.sub('_', ' ', filename[:-10])
                 
-            sent_dict, game_data = buildSentDict(data_file_name, stop_words)
-            info = mutualInfo(sent_dict, game_data['num_recommend'], game_data['num_not_recommend'])
+            try:
+                sent_dict, game_data = buildSentDict(data_file_name, stop_words)
+                info = mutualInfo(sent_dict, game_data['num_recommend'], game_data['num_not_recommend'])
 
-            positive_list = sorted([[word, info[word][0]] for word in info], key=lambda x: -1*x[1])
-            negative_list = sorted([[word, info[word][1]] for word in info], key=lambda x: -1*x[1])
-
-            game_data['top_pos_words'] = positive_list[:10]
-            game_data['top_neg_words'] = negative_list[:10]
+                game_data['sent_info'] = info
             
-            games.append(game_data)
+                games.append(game_data)
 
-            print('Top ten positive words: ')
-            for i in range(10):
-                print(str(positive_list[i]) + ' ')
-            print('\nTop ten negative words: ')
-            for i in range(10):
-                print(str(negative_list[i]) + ' ')
-            print(game_data["sentence_1"])
-            print(game_data["sentence_2"])
+                storeToDB(game_data)
 
-    
-    with open(input('Outfile: '), 'w') as outfile:
-         json.dump(games, outfile)
+            except:
+                print(data_file_name + '\n')
