@@ -188,7 +188,14 @@ def clean_review_text(review_text):
 
 if __name__=='__main__':
 
-    gameid = int(input('>Gameid? '))
-    count = int(input('>Reviews to fetch? '))
+    gameid = int(argv[1])
+    count=0
+    date=None
+    
+    try:
+        count = int(argv[2])
 
+    except:
+        date=argv[2]
+        
     dump_reviews_to_json(gameid, count)
