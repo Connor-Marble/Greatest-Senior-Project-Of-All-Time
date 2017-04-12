@@ -3,7 +3,6 @@ import time
 import re
 from sys import argv
 import requests
-import urllib2
 from xml.etree import ElementTree as et
 from collections import namedtuple
 import logging as log
@@ -61,7 +60,7 @@ class ReviewScraper(object):
 
     def __exit__(self, error_type, error_value, traceback):
         #where we will record our place in DB
-        print error_type or ''
+        print(error_type or '')
         return not bool(error_type or error_value or traceback)
 
     def _get_next_page(self):
@@ -82,15 +81,15 @@ class ReviewScraper(object):
         title_m=re.search(title_pattern ,storepage)
         dev_m=re.search(dev_pattern, storepage)
         
-        self.title = title_m.group('title').encode('utf-8')
-        dev = dev_m.group('dev').encode('utf-8')
-        pub = dev_m.group('pub').encode('utf-8')
-
+        self.title = title_m.group('title')
+        dev = dev_m.group('dev')
+        pub = dev_m.group('pub')
+        
         categories = re.finditer(category_pattern, storepage) or []
-        categories = map(lambda c:c.group('category').encode('utf-8'), categories)
+        categories = list(map(lambda c:c.group('category'), categories))
 
         genres = re.finditer(genre_pattern, storepage[storepage.find('Genre:'):]) or []
-        genres = map(lambda g:g.group('genre').encode('utf-8'), genres)
+        genres = list(map(lambda g:g.group('genre'), genres))
         
         metadata = {
             'title':self.title,
@@ -102,7 +101,7 @@ class ReviewScraper(object):
 
         return metadata
         
-    def next(self):
+    def __next__(self):
         if self.currentpage:
             return self.currentpage.pop(0)
 
@@ -142,8 +141,8 @@ class ReviewScraper(object):
                 #no more reviews could be found
                 pass
                                   
-            except Exception, e:
-                print 'unexpected error {}'.format(e)
+            except Exception as e:
+                print('unexpected error {}'.format(e))
                 raise 
 
             return output
@@ -157,7 +156,6 @@ def dump_reviews_to_json(gameid, count):
     
     with ReviewScraper(gameid) as scraper:
         with open('{}/{}.json'.format(destination, gameid), 'w') as output:
-            
             output.write(json.dumps(scraper.get_metadata()) + '\n')
             
             for i, review in enumerate(scraper):
@@ -168,13 +166,13 @@ def dump_reviews_to_json(gameid, count):
                           '"review":{}}}\n').format(review.foundhelpful,
                                                 review.notfoundhelpful,
                                                 "recommended" if review.thumbs_up else "not recommended",
-                                                    review.text.encode('utf-8'))
+                                                    review.text)
 
                     output.write(json_s.replace('<br>', ''))
                     
                 except:
                     log.error("Problem writing review to json.")
-                    print review.text
+                    print(review.text)
 
                 if i%100 is 0:
                     log.info('scraped {} reviews of requested {}'.format(i, count))
