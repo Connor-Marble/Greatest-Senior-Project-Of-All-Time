@@ -34,6 +34,8 @@ def mark_done(games):
     for game in games:
         with conn.cursor() as cur:
             cur.execute(delete_query.format(game))
+    
+    conn.commit()
 
 
 if __name__=='__main__':
