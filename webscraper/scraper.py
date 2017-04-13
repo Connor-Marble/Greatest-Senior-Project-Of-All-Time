@@ -162,8 +162,8 @@ def dump_reviews_to_json(gameid, count):
                 try:
                     json_s = ('{{"num_found_helpful": {},'+\
                           '"num_found_unhelpful": {},'+\
-                          '"rating": {},'+\
-                          '"review":{}}}\n').format(review.foundhelpful,
+                          '"rating": "{}",'+\
+                          '"review":"{}"}}\n').format(review.foundhelpful,
                                                 review.notfoundhelpful,
                                                 "recommended" if review.thumbs_up else "not recommended",
                                                     review.text)
