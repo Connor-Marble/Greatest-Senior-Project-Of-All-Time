@@ -165,8 +165,7 @@ def storeToDB(game_data):
 
     connection.close()
 
-
-if __name__ == '__main__':
+def run_analysis():
     stop_file_name = 'stopwords.txt'
     games = []
     
@@ -191,5 +190,10 @@ if __name__ == '__main__':
 
                 storeToDB(game_data)
 
-            except:
+            except Exception as e:
+                print(e)
                 print(data_file_name + '\n')
+
+
+if __name__ == '__main__':
+    run_analysis()
