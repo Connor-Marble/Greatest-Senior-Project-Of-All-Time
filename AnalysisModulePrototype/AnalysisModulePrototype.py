@@ -31,32 +31,34 @@ def buildSentDict(file_name, stop_words):
                 thumbs_up += 1
             else:
                 thumbs_down += 1
-
+            
+            #Strip HTML tags
+            review = re.sub('</?\w+((\s+\w+(\s*=\s*(?:".*?"|\'.*?\'|[\^\'">\s]+))?)+\s*|\s*)/?>', '', data['review'])
+            review = re.sub('&lt|&rt|br>|&quot', '', review)
+            review = review.strip()
+            
             # If review is helpful, grab sentence.
             if data['num_found_helpful']:
                 helpfulness = float(data['num_found_helpful']) * float(data['num_found_helpful']) \
                               / float(data['num_found_unhelpful'] + data['num_found_helpful'])
             else:
                 helpfulness = 0
+            
             if helpfulness > sen_2_score and helpfulness <= sen_1_score:
                 sen_2_score = helpfulness
-                sentence2 = re.split('\.|!|\?', data['review'])[0]
+                sentence2 = re.split('\.|!|\?', review)[0]
             if helpfulness > sen_1_score:
                 sen_2_score = sen_1_score
                 sentence2 = sentence1
                 sen_1_score = helpfulness
-                sentence1 = re.split('\.|!|\?', data['review'])[0]
+                sentence1 = re.split('\.|!|\?', review)[0]
                 
             # Instantiate the lemmatizer
             L = WordNetLemmatizer()
             lemma = L.lemmatize
-            #Strip HTML tags
-            review = re.sub('</?\w+((\s+\w+(\s*=\s*(?:".*?"|\'.*?\'|[\^\'">\s]+))?)+\s*|\s*)/?>', '', data['review'])
-            review = re.sub('&lt|&rt|br>', '', review)
-            review = review.strip()
             #Clear out bad unicode
-            review = review.encode('ascii', 'ignore')
-            review = review.encode('utf-8')
+            #review = review.encode('ascii', 'ignore')
+            #review = review.encode('utf-8')
             # Convert text to bag of words, normalized to lowercase and lemmatized
             bag_of_words = { lemma(word.lower()) for word in re.findall('\w+\'?\w{1,2}', review)
                              if (word.lower() not in stop_words) and len(word) < 30}

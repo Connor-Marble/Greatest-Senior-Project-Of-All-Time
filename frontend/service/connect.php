@@ -2,14 +2,14 @@
   $connection = NULL;
   function openConnection() {
     global $connection;
-    $connection = mysqli_connect(\\\\REDACTED\\\\);
+    $connection = mysqli_connect('localhost', 'mbrad287', 'Fra6Uchu', 'bookstore_mbrad287');
     if (!$connection) {
       die("Connection failed: " . mysqli_connect_error());
     }
   }
     function runQuery($query) {
     global $connection;
-    $result = mysqli_query($connection, $query) or trigger_error(mysqli_error());
+    $result = mysqli_query($connection, $query);
     return $result;
   }
   function getAllFrom($table) {

@@ -1,0 +1,36 @@
+<div class="all-games-container">
+	<div class="all-steam-games-container all-games-list-container col-xs-4">
+		<h3>All Steam Games</h3>
+		<div>
+			<input id="all-games-search" class="form-control all-games-search" placeholder="Search for a game..."/>
+		</div>
+		<div infinite-scroll="getMoreGames()" infinite-scroll-immediate-check="false">
+			<div ng-repeat="game in filteredGamesWDNR">
+				<button title="Request Game" class="add-to-queue-button btn btn-xs btn-success" ng-click="addGameToQueue(game)">
+					<img src="img/add.png" />
+				</button>
+				<a href="https://store.steampowered.com/app/{{game.id}}">{{ game.name }}</a>
+			</div>
+		</div>
+	</div>
+	<div id="requested-games-container"class="col-xs-4">
+		<h3>Requested Games</h3>
+		<div id="sortable-list" ng-repeat="game in requestedGames">
+			<div id="list-item">
+				<button title="Move Game" class="add-to-queue-button btn btn-xs">
+					<img src="img/reorder.png" />
+				</button>
+				<a class="requested-game" href="http://store.steampowered.com/app/{{game.id}}">{{ game.name }}</a>
+				<div class="priority-container">
+					<span class="priority-value">{{game.priority}}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="all-analyzed-games all-games-list-container col-xs-4">
+		<h3>Analyzed Games</h3>
+		<div ng-repeat="game in gamesWithData">
+			<a href="#/game/{{game.id}}">{{ game.name }}</a>
+		</div>
+	</div>
+</div>
