@@ -7,6 +7,10 @@ from xml.etree import ElementTree as et
 from collections import namedtuple
 import logging as log
 import json
+from threading import Thread
+
+log.basicConfig(level=0)
+PAGES_PER_REQUEST=4
 
 destination = './reviews'
 
@@ -33,11 +37,16 @@ store_url_base="http://store.steampowered.com/app/{}/"
 #review structure
 Review=namedtuple('Review', 'date text thumbs_up foundhelpful notfoundhelpful')
 
+
 age_bypass_cookies={
     'birthtime' : '28805197',
     'path' : '/',
     'domain' : 'store.steampowered.com'
 }
+
+def scrape(url, resultarr, i):
+    resultarr[i]=requests.get(url).text
+
 
 class ReviewScraper(object):
 
@@ -64,18 +73,31 @@ class ReviewScraper(object):
         return not bool(error_type or error_value or traceback)
 
     def _get_next_page(self):
-        request_url=url_base.format(appid=self.gameid, offset=(self.page-1)*10, pagenum=self.page)
-        response = requests.get(request_url, cookies=age_bypass_cookies)
-        content = response.text
-        self.currentpage = ReviewScraper.parse_review_page(content)
-        self.page += 1
+        urls = list(map(lambda page: url_base.format(appid=self.gameid, offset=(page-1)*10, pagenum=page),range(self.page,self.page+PAGES_PER_REQUEST)))
+        responses = [None for _ in range(len(urls))]
+
+        threads = [Thread(target=scrape, args=(urls[i], responses, i)) for i in range(len(urls))]
+        list(map(lambda t:t.start(), threads))
+        
+        while None in responses:
+            time.sleep(0.1)
+
+        list(map(lambda t:t.join(), threads))
+
+
+        contents = map(ReviewScraper.parse_review_page, responses)
+
+        self.currentpage = sum(contents, [])
+        self.page += PAGES_PER_REQUEST
         return bool(self.currentpage)
 
 
     def get_metadata(self):
 
         request_url=store_url_base.format(self.gameid)
+
         response = requests.get(request_url, cookies=age_bypass_cookies)
+
         storepage=response.text.replace('\n', '')
         
         title_m=re.search(title_pattern ,storepage)
@@ -185,6 +207,7 @@ def clean_review_text(review_text):
     if '</div>' in review_text:
         return review_text[review_text.rindex('</div>')+7:].strip()
     return review_text.strip()
+
 
 if __name__=='__main__':
 

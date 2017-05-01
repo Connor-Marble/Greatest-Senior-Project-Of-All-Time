@@ -1,3 +1,4 @@
+import os
 import pymysql
 import scraper
 import logging as log
@@ -6,6 +7,7 @@ import AnalysisModulePrototype as analmod
 user = 'mbrad287'
 passw = 'Fra6Uchu'
 db = 'bookstore_mbrad287'
+filenamebase='./reviews/{}.json'
 
 def get_top_queue_items():
 
@@ -24,7 +26,7 @@ def get_top_queue_items():
 def scrape_em(games):
     for game_id in games:
         log.info('Scraping {}...'.format(game_id))
-        scraper.dump_reviews_to_json(game_id, 1000)
+        scraper.dump_reviews_to_json(game_id, 10000)
 
 def mark_done(games):
     delete_query='delete from Queue WHERE game_id={}'
@@ -44,5 +46,7 @@ if __name__=='__main__':
     scrape_em(games)
     analmod.run_analysis()
     mark_done(games)
-    
+
+    for game in games:
+        os.remove(filenamebase.format(game))
     
