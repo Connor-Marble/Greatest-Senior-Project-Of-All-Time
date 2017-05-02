@@ -61,12 +61,9 @@ def buildSentDict(file_name, stop_words):
             # Instantiate the lemmatizer
             L = WordNetLemmatizer()
             lemma = L.lemmatize
-            #Clear out bad unicode
-            #review = review.encode('ascii', 'ignore')
-            #review = review.encode('utf-8')
             # Convert text to bag of words, normalized to lowercase and lemmatized
             bag_of_words = { lemma(word.lower()) for word in re.findall('\w+\'?\w{1,2}', review)
-                             if (word.lower() not in stop_words) and len(word) < 30}
+                             if (lemma(word.lower()) not in stop_words) and len(word) < 30}
 
             # Update sent dict
             for word in bag_of_words:
