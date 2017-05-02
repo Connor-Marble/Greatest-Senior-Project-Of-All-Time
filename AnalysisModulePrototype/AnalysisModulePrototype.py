@@ -14,8 +14,8 @@ def buildSentDict(file_name, stop_words):
     sent_dict = {}
     thumbs_up = 0
     thumbs_down = 0
-    sen_1_score = 1
-    sen_2_score = 1
+    sen_1_score = 0
+    sen_2_score = 0
     sentence1 = ''
     sentence2 = ''
     with open(file_name, encoding='utf8') as datafile:
