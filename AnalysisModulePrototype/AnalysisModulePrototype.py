@@ -157,10 +157,7 @@ def storeToDB(game_data):
                 query = "INSERT INTO `Word` (`word`) VALUES (%s)"
                 cursor.execute(query, (word))
                 connection.commit()
-                query = "SELECT `id` FROM `Word` WHERE `word` = %s"
-                cursor.execute(query, (word))
-                connection.commit()
-                word_id = cursor.fetchone()
+                word_id = cursor.lastrowid
                 if word_id == None:
                     print('!!!!!!!!!!! word_id is None for ' + word + ' !!!!!!!!!!!!')
             #Update GameWord
