@@ -19,11 +19,16 @@ def buildSentDict(file_name, stop_words):
     sentence1 = ''
     sentence2 = ''
     with open(file_name, encoding='utf8') as datafile:
-        game_name = datafile.readline()
+        metadata = datafile.readline()
+        metadata = json.loads(metadata)
+        genres = metadata['genres']
+        game_name = metadata['title']
+        print("Genres: " + str(genres) + '\n')
         for line in datafile:
             try:
                 data = json.loads(line)
             except json.decoder.JSONDecodeError:
+                print('JSONDecodeError')
                 continue
             # Update thumbs up/down
             recommended = (data['rating'] == 'recommended')
@@ -80,7 +85,8 @@ def buildSentDict(file_name, stop_words):
                          'sentence_1': sentence1,
                          'sentence_2': sentence2,
                          'sen_1_score': sen_1_score,
-                         'sen_2_score': sen_2_score
+                         'sen_2_score': sen_2_score,
+                         'genres': genres
                          }
 
     return sent_dict, game_data
@@ -111,6 +117,7 @@ def storeToDB(game_data):
     num_recommend = int(game_data['num_recommend'])
     num_not_recommend = int(game_data['num_not_recommend'])
     info = game_data['sent_info']
+    genres = game_data['genres']
     
     user = 'mbrad287'
     password = 'Fra6Uchu'
@@ -161,6 +168,22 @@ def storeToDB(game_data):
             if not cursor.execute(query, (game_id, word_id)):
                 query = "INSERT INTO `GameWord` (`game_id`, `word_id`, `pos_score`, `neg_score`) VALUES (%s, %s, %s, %s)"
                 cursor.execute(query, (game_id, word_id, info[word][0], info[word][1]))
+                connection.commit()
+                          
+        for genre in genres:
+            query = "SELECT `id` FROM `Genre` WHERE `name` = %s"
+            if not cursor.execute(query, (genre)):
+                query = "INSERT INTO `Genre` (`name`) VALUES (%s)"
+                cursor.execute(query, (genre))
+                connection.commit()
+                genre_id = cursor.lastrowid
+            else:
+                genre_id = cursor.fetchone()
+                
+            query = "SELECT * FROM `GameGenre` WHERE `genre_id` = %s AND `game_id` = %s"
+            if not cursor.execute(query, (genre_id, game_id)):
+                query = "INSERT INTO `GameGenre` (`game_id`, `genre_id`) VALUES (%s, %s)"
+                cursor.execute(query, (game_id, genre_id))
                 connection.commit()
 
     connection.close()
