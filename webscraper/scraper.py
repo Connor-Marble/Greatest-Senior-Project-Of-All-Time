@@ -115,7 +115,7 @@ class ReviewScraper(object):
         categories = list(map(lambda c:c.group('category'), categories))
 
         genreblock = storepage[storepage.find('Genre:'):]
-        genreblock = genreblock[:storepage.find('<br>')]
+        genreblock = genreblock[:genreblock.find('Release Date')]
 
         genres = re.finditer(genre_pattern, genreblock) or []
         genres = list(map(lambda g:g.group('genre'), genres))
