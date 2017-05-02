@@ -3,7 +3,32 @@ import json
 import re
 import math
 from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet
+import nltk
 import pymysql
+
+
+def getWordnetTags(treebank_tag):
+        if treebank_tag.startswith('J'):
+            return wordnet.ADJ
+        elif treebank_tag.startswith('V'):
+            return wordnet.VERB
+        elif treebank_tag.startswith('N'):
+            return wordnet.NOUN
+        elif treebank_tag.startswith('R'):
+            return wordnet.ADV
+        else:
+            return ''
+
+def regularizeWord(word):
+    L = WordNetLemmatizer()
+    lemma = L.lemmatize
+    pos = getWordnetTags(nltk.pos_tag([word])[0][1])
+    if pos:
+        word = lemma(word, pos)
+    else:
+        word = lemma(word)
+    return word
 
 # Reads json file and constructs a sentiment dictionary that records the number
 # of positive and negative reviews that contain a particular word. The structure
@@ -58,12 +83,9 @@ def buildSentDict(file_name, stop_words):
                 sen_1_score = helpfulness
                 sentence1 = re.split('\.|!|\?', review)[0]
                 
-            # Instantiate the lemmatizer
-            L = WordNetLemmatizer()
-            lemma = L.lemmatize
             # Convert text to bag of words, normalized to lowercase and lemmatized
-            bag_of_words = { lemma(word.lower()) for word in re.findall('\w+\'?\w{1,2}', review)
-                             if (lemma(word.lower()) not in stop_words) and len(word) < 30}
+            bag_of_words = { regularizeWord(word) for word in re.findall('\w+\'?\w{1,2}', review)
+                             if regularizeWord(word) not in stop_words) and len(word) < 30}
 
             # Update sent dict
             for word in bag_of_words:
