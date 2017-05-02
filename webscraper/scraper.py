@@ -104,13 +104,20 @@ class ReviewScraper(object):
         dev_m=re.search(dev_pattern, storepage)
         
         self.title = title_m.group('title')
-        dev = dev_m.group('dev')
-        pub = dev_m.group('pub')
+
+        dev, pub = '', ''
+
+        if dev_m:
+            dev = dev_m.group('dev')
+            pub = dev_m.group('pub')
         
         categories = re.finditer(category_pattern, storepage) or []
         categories = list(map(lambda c:c.group('category'), categories))
 
-        genres = re.finditer(genre_pattern, storepage[storepage.find('Genre:'):]) or []
+        genreblock = storepage[storepage.find('Genre:'):]
+        genreblock = genreblock[:storepage.find('<br>')]
+
+        genres = re.finditer(genre_pattern, genreblock) or []
         genres = list(map(lambda g:g.group('genre'), genres))
         
         metadata = {
@@ -189,7 +196,7 @@ def dump_reviews_to_json(gameid, count):
                                                 review.notfoundhelpful,
                                                 "recommended" if review.thumbs_up else "not recommended",
                                                     review.text)
-
+                          
                     output.write(json_s.replace('<br>', ''))
                     
                 except:
