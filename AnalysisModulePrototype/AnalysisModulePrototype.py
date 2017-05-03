@@ -25,9 +25,9 @@ def regularizeWord(word):
     lemma = L.lemmatize
     pos = getWordnetTags(nltk.pos_tag([word])[0][1])
     if pos:
-        word = lemma(word, pos)
+        word = lemma(word, pos).lower()
     else:
-        word = lemma(word)
+        word = lemma(word).lower()
     return word
 
 # Reads json file and constructs a sentiment dictionary that records the number
@@ -85,7 +85,7 @@ def buildSentDict(file_name, stop_words):
                 
             # Convert text to bag of words, normalized to lowercase and lemmatized
             bag_of_words = { regularizeWord(word) for word in re.findall('\w+\'?\w{1,2}', review)
-                             if regularizeWord(word) not in stop_words) and len(word) < 30}
+                             if regularizeWord(word) not in stop_words and len(word) < 30}
 
             # Update sent dict
             for word in bag_of_words:
