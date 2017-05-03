@@ -1,0 +1,15 @@
+ <div>
+	<h1 class="genre-name" >{{ genreName }}</h1>
+	<div class="game-list">
+		<h3>Top Games</h3>
+		<div class="games" ng-repeat="game in gamesForGenre">
+			<a href="#/game/{{game.id}}">{{ game.name }}</a>
+		</div>
+	</div>
+	<div class="word-list">
+		 <h3 class="word-list-header">Positive Words</h3>
+		 <div class="pos-words" ng-repeat="posWord in posWords">
+			 <div id="pos-word{{$index}}">{{ posWord.word }}</div>
+		 </div>
+	 </div>
+ </div>

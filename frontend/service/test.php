@@ -51,6 +51,15 @@
 		case "getDataForAutocomplete":
 			getDataForAutocomplete($_GET["arg1"]);
 			break;
+		case "getAllFeatures":
+			getAllFeatures();
+			break;
+		case "getAllGenres":
+			getAllGenres();
+			break;
+		case "getDataForGenre":
+			getDataForGenre($_GET["arg1"]);
+			break;
 	}
 	
 	function strtolower_utf8($inputString) {
@@ -59,13 +68,25 @@
 		$outputString    = utf8_encode($outputString);
 		return $outputString;
 	}
-
+	
+	function fixChars($data) {
+		$data = preg_replace('/\\x{0099}/u', '™', $data);
+		$data = preg_replace('/\\x{0092}/u', '\'', $data);
+		$data = preg_replace('/\\x{0096}/u', '-', $data);
+		$data = preg_replace('/&quot;/', '"', $data);
+		$data = preg_replace('/&amp;/', '&', $data);
+		$data = preg_replace('/&trade;/', '™', $data);
+		$data = preg_replace('/&reg;/', '®', $data);
+		$data = preg_replace('/&#174;/', '®', $data);
+		return $data;
+	}
 	
 	function jsonifyMult($results) {
 		$array = array();
 		if(mysqli_num_rows($results)) {
 			while($row = mysqli_fetch_assoc($results)) {
 				$row = array_map('utf8_encode', $row);
+				$row = fixChars($row);
 				$array[] = $row;
 			}
 		}
@@ -75,6 +96,7 @@
 	function jsonifyRow ($result) {
 		if(mysqli_num_rows($result)) {
 			$formatted = array_map('utf8_encode', mysqli_fetch_assoc($result));
+			$formatted = fixChars($formatted);
 			return json_encode($formatted);
 		}
 	}
@@ -192,9 +214,34 @@
 	function getDataForAutocomplete($phrase) {
 		$games = runQuery("SELECT id, name FROM (SELECT DISTINCT Rec.game_id FROM (SELECT game_id FROM Recommendation GROUP BY game_id) as Rec LEFT JOIN GameWord ON Rec.game_id=GameWord.game_id) as GameIds LEFT JOIN Game ON GameIds.game_id=Game.id WHERE name REGEXP '".$phrase."' ORDER BY CASE WHEN name REGEXP '^".$phrase."' THEN 1 ELSE 2 END LIMIT 25");
 		$features = runQuery("SELECT id, name, 'is_feat' FROM Feature WHERE name REGEXP '".$phrase."' LIMIT 25");
+		$genres = runQuery("SELECT id, name, 'is_genre' FROM Genre WHERE name REGEXP'".$phrase."' LIMIT 25");
 		//even if we only get one result, the easy autocomplete expects an array
-		echo "{\"games\":" . jsonifyMult($games) . ",\"features\":" . jsonifyMult($features) . "}";
+		echo "{\"games\":" . jsonifyMult($games) . ",\"features\":" . jsonifyMult($features) . ",\"genres\":" . jsonifyMult($genres) . "}";
 	}
+	
+	function getAllFeatures() {
+		$features = runQuery("SELECT name, id FROM Feature");
+		echo jsonify($features);
+	}
+	
+	function getAllGenres() {
+		$genres = runQuery("SELECT name, id FROM Genre");
+		echo jsonify($genres);
+	}
+	
+	function getDataForGenre($id) {
+		$genreName = runQuery("SELECT name FROM Genre WHERE id=".intval($id));
+		$games = runQuery("SELECT * FROM (SELECT Game.name, Game.id, neg + pos as numReviews, pos/(pos+neg) as percentPos FROM Genre LEFT JOIN GameGenre ON Genre.id = GameGenre.genre_id LEFT JOIN Game ON GameGenre.game_id = Game.id LEFT JOIN Recommendation ON Game.id = Recommendation.game_id WHERE Genre.id = ".intval($id).") as T ORDER BY CASE WHEN numReviews > 1000 THEN 1 ELSE 2 END, percentPos DESC LIMIT 10");
+		$words = runQuery("SELECT word, SUM(pos_score) as score FROM Genre LEFT JOIN GameGenre ON Genre.id = GameGenre.genre_id LEFT JOIN GameWord ON GameGenre.game_id = GameWord.game_id LEFT JOIN Word ON GameWord.word_id = Word.id WHERE Genre.id = ".intval($id)." GROUP BY word ORDER BY score DESC LIMIT 10");
+		//$words = runQuery("SELECT word, SUM(pos_score) as score FROM Genre LEFT JOIN GameGenre ON Genre.id = GameGenre.genre_id LEFT JOIN (SELECT game_id, pos_score, word_id FROM GameWord ORDER BY pos_score DESC LIMIT 1000) as someWords ON GameGenre.game_id = someWords.game_id LEFT JOIN Word ON someWords.word_id = Word.id WHERE Genre.id = ".intval($id)." GROUP BY word ORDER BY score DESC LIMIT 10");
+		echo "{\"genre\":" . jsonify($genreName) . ",\"games\":" .jsonifyMult($games) . ",\"words\":" . jsonifyMult($words) . "}";
+	}
+	
+	//how to nuke a game 
+	/* DELETE FROM GameGenre WHERE game_id = idToDel;
+	DELETE FROM GameWord WHERE game_id = idToDel;
+	DELETE FROM Quotes WHERE game_id = idToDel;
+	DELETE FROM Recommendation WHERE game_id = idToDel; */
 
 	closeConnection();
 ?>

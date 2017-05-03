@@ -24,6 +24,8 @@ controller('mainCtrl', function ($scope, protoData) {
 					var item = $("#search").getSelectedItemData();
 					if(item.is_feat) {
 						window.location.hash = "/feature/" + item.id;
+					} else if (item.is_genre) {
+						window.location.hash = "/genre/" + item.id;
 					} else {
 						window.location.hash = "/game/" + item.id;
 					}
@@ -43,12 +45,17 @@ controller('mainCtrl', function ($scope, protoData) {
 				{
 					listLocation: "games",
 					header: "--GAMES--",
-					maxNumberOfElements: 8
+					maxNumberOfElements: 6
 				},
 				{
 					listLocation: "features",
 					header: "--FEATURES--",
-					maxNumberOfElements: 4
+					maxNumberOfElements: 3
+				},
+				{
+					listLocation: "genres",
+					header: "--GENRES--",
+					maxNumberOfElements: 3
 				}
 			]
 		};
@@ -68,21 +75,6 @@ controller('gameCtrl', function ($scope, $routeParams, protoData) {
 	$("#title").text("Sentiment Analysis");
 
     $scope.gameTitle = "";
-	
-	
-    /*$scope.init = function () {
-        protoData.getData().done(function (data) {
-	        var dataFile = JSON.parse(data);
-			var indexOfGame;
-			for(var i=0; i<dataFile.length; i++) {
-				if(dataFile[i].id == $routeParams.id) {
-					indexOfGame = i;
-					break;
-				}
-			}
-            run(dataFile[indexOfGame]);
-	    });
-	}*/
 	
 	$scope.init = function () {
 		protoData.getGameWithRecsAndSens($routeParams.id, 2).done(function(data) {
@@ -129,9 +121,6 @@ controller('gameCtrl', function ($scope, $routeParams, protoData) {
 			$scope.$apply();
 	    });
 	    
-	    
-	//create on hover function for each word? display tooltip with value?
-	//maybe.
 
 	
         $scope.quotes = [];
@@ -205,6 +194,7 @@ controller('allGamesCtrl', function ($scope, $routeParams, protoData) {
 	protoData.getGamesThatDontHaveDataNotRequested().done(function(data) {
 		$scope.gamesWitoutDataNotRequested = JSON.parse(data);
 		$scope.filteredGamesWDNR = $scope.gamesWitoutDataNotRequested.slice(0,100);
+		$('#all-games-search').trigger('keyup');
 		$scope.$apply();
 	});
 	
@@ -289,25 +279,7 @@ controller('allGamesCtrl', function ($scope, $routeParams, protoData) {
 		
 		if($routeParams.phrase) {
 			$('#all-games-search').val($routeParams.phrase);
-			$('#all-games-search').trigger('keyup');
 		}
-		
-		$(document).on('click', '.priority-value', function () {
-			$(this).prop('contenteditable', true);
-			$(this).css({
-				"background-color": "white",
-				"color": "black"
-			});
-		});
-		
-		$(document).on('blur', '.priority-value', function() {
-			$(this).prop('contenteditable', false);
-			$(this).css({
-				"background-color": "transparent",
-				"color": "#f0ead6"  //make sure this always matches with the css
-			});
-			priorityChanged();
-		});
 		
 	});
 	
@@ -334,6 +306,68 @@ controller('featureCtrl', function ($scope, $routeParams, protoData) {
 	function run(featureData) {
 		
 	}
+	
+	$scope.init();
+}).
+controller('allFeaturesCtrl', function ($scope, protoData) {
+	$("#title").text("Sentiment Analysis");
+	
+	$scope.features = [];
+	
+	$scope.init = function() {
+		protoData.getAllFeatures().done(function(data) {
+			$scope.features = JSON.parse(data);
+			$scope.$apply();
+		});
+	}
+	
+	$scope.init();
+}).
+controller('allGenresCtrl', function ($scope, protoData) {
+	$("#title").text("Sentiment Analysis");
+	
+	$scope.genres = [];
+	
+	$scope.init = function() {
+		protoData.getAllGenres().done(function(data) {
+			$scope.genres = JSON.parse(data);
+			$scope.$apply();
+		});
+	}
+	
+	$scope.init();
+}).
+controller('genreCtrl', function ($scope, $routeParams, protoData) {
+	$("#title").text("Sentiment Analysis");
+	
+	$scope.gamesForGenre = [];
+	$scope.posWords = [];
+	
+	$scope.init = function() {
+		protoData.getDataForGenre($routeParams.id).done(function(data) {
+			var genreData = JSON.parse(data);
+			$scope.genreName = genreData.genre.name;
+			$scope.gamesForGenre = genreData.games;
+			$scope.posWords = genreData.words;
+			run();
+			$scope.$apply();
+		});
+	}
+	function run() {
+		$(function() {
+			if($scope.posWords.length > 0) {
+				var scalingFactorPos = 100.0 / $scope.posWords[0].score;
+			}
+			
+			for(var i=0; i<$scope.posWords.length; i++) {
+				var id = "#pos-word" + i;
+				var color = "hsl(120, " + ($scope.posWords[i].score * scalingFactorPos) + "%, 25%)";
+				$(id).css("color", color);
+				$scope.posWords[i].score = Math.round($scope.posWords[i].score);
+			}
+		});
+	}
+	
 	
 	$scope.init();
 });

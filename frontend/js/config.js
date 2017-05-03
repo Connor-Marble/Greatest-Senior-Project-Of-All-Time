@@ -12,7 +12,9 @@ angular.module('app').config(['$routeProvider', '$locationProvider', function ($
         templateUrl: 'views/game.html',
         controller: 'gameCtrl'
     }).
-    when('/genre', {
+    when('/genre/:id', {
+		templateUrl: 'views/genre.html',
+		controller: 'genreCtrl'
     }).
 	when('/feature/:id', {
 		templateUrl: 'views/feature.html',
@@ -25,6 +27,14 @@ angular.module('app').config(['$routeProvider', '$locationProvider', function ($
 	when('/allgames/:phrase', {
 		templateUrl: 'views/allGames.html',
 		controller: 'allGamesCtrl'
+	}).
+	when('/allfeatures', {
+		templateUrl: 'views/allFeatures.html',
+		controller: 'allFeaturesCtrl'
+	}).
+	when('/allgenres', {
+		templateUrl: 'views/allGenres.html',
+		controller: 'allGenresCtrl'
 	}).
     otherwise('/');
 }]);

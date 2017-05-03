@@ -60,7 +60,7 @@ h3 {
 	float: right;
 }
 
-.game-title, .feature-name {
+.game-title, .feature-name, .page-title, .genre-name {
 	margin-top: 20px;
 	margin-left: 20px;
 	margin-bottom: 20px;
@@ -223,9 +223,17 @@ h3 {
 	padding: 0px;
 }
 
+.feature-list > div > a, .genre-list > div > a {
+	font-family: 'Quicksand', sans-serif;
+	font-size: 2em;
+	color: #f0ead6 !important;
+	margin-left: 40px;
+}
 
-
-
+.feature-list > div > a:hover, .genre-list > div > a:hover {
+	color: #999589 !important;
+	text-decoration: none;
+}
 
 
 

@@ -78,6 +78,24 @@ factory('protoData', function ($http) {
 			url: 'service/test.php?func=getGamesForFeatureNeg&arg1=' + id
 		})
 	}
+	
+	function _getAllFeatures() {
+		return $.ajax({
+			url: 'service/test.php?func=getAllFeatures'
+		})
+	}
+	
+	function _getAllGenres() {
+		return $.ajax({
+			url: 'service/test.php?func=getAllGenres'
+		})
+	}
+	
+	function _getDataForGenre(id) {
+		return $.ajax({
+			url: 'service/test.php?func=getDataForGenre&arg1=' + id
+		})
+	}
 
     return {
 		getAllGameIDsAndNames: _getAllGameIDsAndNames,
@@ -92,6 +110,9 @@ factory('protoData', function ($http) {
 		getRequestedGames: _getRequestedGames,
 		requestGame: _requestGame,
 		getGamesForFeature: _getGamesForFeature,
-		getGamesForFeatureNeg: _getGamesForFeatureNeg
+		getGamesForFeatureNeg: _getGamesForFeatureNeg,
+		getAllFeatures: _getAllFeatures,
+		getAllGenres: _getAllGenres,
+		getDataForGenre: _getDataForGenre
     }
 });

@@ -1,4 +1,4 @@
- <div ng-controller="gameCtrl">
+ <div>
      <a class="game-title" href="https://store.steampowered.com/app/{{game.id}}">{{ game.title }}</a>
      <div class="quotes-container">
          <div class="quote" ng-repeat="quote in quotes track by $index">
@@ -10,17 +10,13 @@
          <div class="word-list">
              <h3 class="word-list-header">Positive Words</h3>
              <div class="pos-words" ng-repeat="posWord in posWords">
-                 <div id="pos-word{{$index}}">{{ posWord.word }}
-					<span class="tooltip">{{ posWord.score }}</span>
-				 </div>
+                 <div id="pos-word{{$index}}">{{ posWord.word }}</div>
              </div>
          </div>
          <div class="word-list">
              <h3 class="word-list-header">Negative Words</h3>
              <div class="neg-words" ng-repeat="negWord in negWords">
-                 <div id="neg-word{{$index}}">{{ negWord.word }}
-					<span class="tooltip">{{ negWord.score }}</span>
-				 </div>
+                 <div id="neg-word{{$index}}">{{ negWord.word }}</div>
              </div>
          </div>
      </div>
